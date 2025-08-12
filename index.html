@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fiados • Tiendita</title>
+  <meta name="theme-color" content="#0b0b0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>Fiados • Tiendita</h1>
+  <div class="header-actions">
+    <button id="addPersonBtn" class="btn primary">Añadir fiador</button>
+    <div class="menu-wrap">
+      <button id="reportMenuBtn" class="btn">Resumen</button>
+      <div id="reportMenu" class="menu">
+        <button id="downloadTxtBtn" class="menu-item">Descargar TXT</button>
+        <button id="downloadPdfBtn" class="menu-item">Descargar PDF</button>
+        <button id="sendWhatsAppBtn" class="menu-item">Enviar por WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="roleTabs">
+  <button data-role="all" class="tab active">Todos</button>
+  <button data-role="estudiante" class="tab">Estudiantes</button>
+  <button data-role="maestro" class="tab">Maestros</button>
+  <button data-role="asistente" class="tab">Asistentes</button>
+  <button data-role="otro" class="tab">Otro</button>
+</nav>
+
+<section class="toolbar">
+  <input id="searchInput" class="input" type="search" placeholder="Buscar por nombre…">
+  <div class="legend">
+    <span class="pill gray">Deuda normal</span>
+    <span class="pill red">A ≤ $2 del límite</span>
+    <span class="pill green">Saldo en 0</span>
+  </div>
+</section>
+
+<main id="cardsContainer" class="cards"></main>
+
+<div id="personModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="personModalTitle">Nuevo fiador</h2>
+    <form id="personForm" class="form">
+      <input type="hidden" id="personId">
+      <label class="field">
+        <span>Nombre*</span>
+        <input id="personName" class="input" required>
+      </label>
+      <label class="field">
+        <span>Rol*</span>
+        <select id="personRole" class="input" required>
+          <option value="" disabled selected>Selecciona…</option>
+          <option value="estudiante">Estudiante</option>
+          <option value="maestro">Maestro</option>
+          <option value="asistente">Asistente</option>
+          <option value="otro">Otro</option>
+        </select>
+      </label>
+      <label class="field" id="gradeField" style="display:none;">
+        <span>Grado</span>
+        <input id="personGrade" class="input" placeholder="Ej. 8-2">
+      </label>
+      <label class="field">
+        <span>Nota / detalle</span>
+        <input id="personNote" class="input" placeholder="Señas para recordarlo">
+      </label>
+      <label class="field">
+        <span>Límite de fiado ($)*</span>
+        <input id="personLimit" class="input" type="number" min="0" step="0.01" value="10" required>
+      </label>
+      <fieldset class="fieldset">
+        <legend>Registro inicial (opcional)</legend>
+        <label class="field">
+          <span>Monto fiado inicial ($)</span>
+          <input id="initialAmount" class="input" type="number" min="0" step="0.01" value="0">
+        </label>
+        <label class="field">
+          <span>Descripción</span>
+          <input id="initialDesc" class="input" placeholder="Ej. merienda, papitas…">
+        </label>
+      </fieldset>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="personCancelBtn">Cancelar</button>
+        <button type="submit" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="detailModal" class="modal hidden">
+  <div class="modal-content large">
+    <div class="detail-head">
+      <div>
+        <h2 id="detailName"></h2>
+        <p id="detailMeta" class="muted"></p>
+      </div>
+      <div class="detail-actions">
+        <button id="editPersonBtn" class="btn">Editar</button>
+        <button id="deletePersonBtn" class="btn danger">Eliminar</button>
+        <button id="closeDetailBtn" class="btn">Cerrar</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <section class="panel">
+        <h3>Estado</h3>
+        <p class="stat"><strong>Total a deber:</strong> $<span id="detailTotal">0.00</span></p>
+        <p class="stat"><strong>Límite:</strong> $<span id="detailLimit">0.00</span></p>
+        <p class="stat"><strong>Restante:</strong> $<span id="detailRemaining">0.00</span></p>
+        <div class="adjust-wrap">
+          <label for="adjustTarget" class="muted">Ajustar deuda total a ($)</label>
+          <div class="row">
+            <input id="adjustTarget" class="input" type="number" step="0.01" min="0" value="">
+            <button id="applyAdjustBtn" class="btn">Aplicar ajuste</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Agregar movimiento</h3>
+        <div class="row">
+          <input id="txAmount" class="input" type="number" step="0.01" min="0.01" placeholder="$ monto">
+          <input id="txDesc" class="input" placeholder="Descripción (opcional)">
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button id="addTxBtn" class="btn primary">+ Fiado</button>
+          <button id="addCreditBtn" class="btn">+ Crédito</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h3>Historial</h3>
+      <div id="txList" class="tx-list"></div>
+    </section>
+  </div>
+</div>
+
+<footer class="app-footer">
+  <span>App desarrollado por Miguel A. Cruz Torres • Para cotización: <a href="mailto:tcam14203@icloud.com">tcam14203@icloud.com</a></span>
+</footer>
+
+<!-- jsPDF para PDF -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .catch(err => console.log('SW error', err));
+    });
+  }
+</script>
+</body>
+</html>
